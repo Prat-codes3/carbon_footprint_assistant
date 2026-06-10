@@ -42,6 +42,35 @@ const ALL_BADGES = [
   { id: 'below_average', name: 'Below Average', description: 'Below global average', icon: '⭐' }
 ];
 
+// ─── Export PDF Report ────────────────────────────────────────────
+function exportPDFReport() {
+  const element = document.querySelector('#page-dashboard .page-content');
+  if (!element) return;
+
+  const btn = document.querySelector('button[aria-label="Export dashboard to PDF"]');
+  const originalText = btn.textContent;
+  btn.textContent = 'Generating PDF...';
+  btn.disabled = true;
+
+  const opt = {
+    margin:       10,
+    filename:     `carbon_report_${new Date().toISOString().split('T')[0]}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#050E0A' },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(element).save().then(() => {
+    btn.textContent = originalText;
+    btn.disabled = false;
+    showToast('Report downloaded successfully!', 'success');
+  }).catch(err => {
+    btn.textContent = originalText;
+    btn.disabled = false;
+    showToast('Failed to generate PDF.', 'error');
+  });
+}
+
 // ─── Initialization ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Set today's date as default in calculator
@@ -231,6 +260,7 @@ function navigateTo(page) {
     case 'dashboard': loadDashboard(); break;
     case 'activities': loadActivities(); break;
     case 'recommendations': loadRecommendations(); break;
+    case 'leaderboard': loadLeaderboard(); break;
     case 'profile': loadProfile(); break;
     case 'assistant': scrollChatToBottom(); break;
   }
@@ -635,6 +665,97 @@ function resetCalculator() {
   document.getElementById('activity-date').value = new Date().toISOString().split('T')[0];
   document.getElementById('co2-preview-value').textContent = '—';
   document.getElementById('activity-error').textContent = '';
+  document.getElementById('flight-from').value = '';
+  document.getElementById('flight-to').value = '';
+  toggleFlightEstimator();
+}
+
+// ─── AI Receipt Scanner ───────────────────────────────────────────
+async function handleReceiptUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const btn = document.getElementById('btn-scan');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Scanning...';
+  btn.style.pointerEvents = 'none';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64Data = e.target.result;
+    
+    try {
+      const result = await window.api.scanReceipt(base64Data, file.type);
+      const items = result.data;
+      
+      if (items && items.length > 0) {
+        // Auto-fill form with the first found item
+        const item = items[0];
+        selectCategory(item.category);
+        setTimeout(() => {
+          document.getElementById('activity-type').value = item.activityType;
+          updateCO2Preview();
+          document.getElementById('activity-quantity').value = item.quantity;
+          document.getElementById('activity-note').value = item.note || 'Scanned from receipt';
+          updateCO2Preview();
+          showToast(`✅ Scanned successfully: Found ${item.activityType}`, 'success');
+        }, 100);
+      } else {
+        showToast('No carbon footprint items found in this image.', 'info');
+      }
+    } catch (err) {
+      showToast('Error scanning receipt: ' + err.message, 'error');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.style.pointerEvents = 'auto';
+      event.target.value = ''; // reset file input
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── AI Flight Estimator ──────────────────────────────────────────
+function toggleFlightEstimator() {
+  const select = document.getElementById('activity-type');
+  const val = select.value;
+  const flightEstimator = document.getElementById('flight-estimator');
+  if (val === 'flight_domestic' || val === 'flight_international') {
+    flightEstimator.style.display = 'block';
+  } else {
+    flightEstimator.style.display = 'none';
+  }
+}
+
+async function handleFlightEstimation() {
+  const fromCity = document.getElementById('flight-from').value.trim();
+  const toCity = document.getElementById('flight-to').value.trim();
+  
+  if (!fromCity || !toCity) {
+    showToast('Please enter both departure and arrival cities.', 'warn');
+    return;
+  }
+
+  const btn = document.getElementById('btn-estimate-flight');
+  const originalText = btn.textContent;
+  btn.textContent = 'Estimating...';
+  btn.disabled = true;
+
+  try {
+    const result = await window.api.estimateFlight(fromCity, toCity);
+    if (result.success && result.distance_km) {
+      document.getElementById('activity-quantity').value = result.distance_km;
+      document.getElementById('activity-note').value = `Flight: ${fromCity} to ${toCity}`;
+      updateCO2Preview();
+      showToast(`✅ Estimated ${result.distance_km} km`, 'success');
+    } else {
+      showToast('Could not estimate distance.', 'warn');
+    }
+  } catch (err) {
+    showToast('Error estimating flight: ' + err.message, 'error');
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 // ─── Activities Log ───────────────────────────────────────────────
@@ -1023,4 +1144,61 @@ function formatDate(dateStr) {
   if (diff === 1) return 'Yesterday';
   if (diff < 7) return `${diff} days ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ─── Leaderboard ──────────────────────────────────────────────────
+async function loadLeaderboard() {
+  const listEl = document.getElementById('leaderboard-list');
+  listEl.innerHTML = '<div class="empty-state"><div class="spinner" style="margin:auto;"></div></div>';
+
+  try {
+    let users = [];
+    if (state.isGuest) {
+      // Mock leaderboard for guest mode
+      users = [
+        { username: 'EcoWarrior99', level: 8, greenScore: 1450 },
+        { username: 'PlanetSaver', level: 7, greenScore: 1200 },
+        { username: 'GreenBean', level: 6, greenScore: 950 },
+        { username: 'TreeHugger', level: 5, greenScore: 820 },
+        { username: state.user?.username || 'Guest', level: state.user?.gamification?.level || 1, greenScore: state.user?.gamification?.greenScore || 0 }
+      ].sort((a,b) => b.greenScore - a.greenScore);
+    } else {
+      const response = await window.api.getLeaderboard();
+      users = response.data;
+    }
+    
+    if (!users || users.length === 0) {
+      listEl.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:2rem;">No users on the leaderboard yet.</p>';
+      return;
+    }
+
+    const html = users.map((u, i) => {
+      let rankIcon = `#${i + 1}`;
+      if (i === 0) rankIcon = '🥇';
+      if (i === 1) rankIcon = '🥈';
+      if (i === 2) rankIcon = '🥉';
+
+      const isCurrentUser = state.user && state.user.username === u.username;
+
+      return `
+        <div style="display:flex; align-items:center; padding:var(--spacing-md); border-bottom:1px solid var(--border-color); background:${isCurrentUser ? 'rgba(0, 212, 170, 0.05)' : 'transparent'};">
+          <div style="font-size:1.5rem; font-weight:bold; width:40px; text-align:center; margin-right:var(--spacing-md); color:${i < 3 ? 'inherit' : 'var(--text-muted)'}">${rankIcon}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:1.1rem; color:var(--text-primary);">
+              ${u.username} ${isCurrentUser ? '(You)' : ''}
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-secondary);">Level ${u.level || 1}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="color:var(--green-primary); font-weight:bold; font-size:1.2rem;">${u.greenScore || 0}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Points</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    listEl.innerHTML = html;
+  } catch (err) {
+    listEl.innerHTML = `<p style="text-align:center; color:var(--color-danger); padding:2rem;">Failed to load leaderboard: ${err.message}</p>`;
+  }
 }

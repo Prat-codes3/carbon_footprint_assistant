@@ -9,6 +9,8 @@
   <meta property="og:description" content="AI-powered carbon footprint tracker with personalized reduction recommendations." />
   <meta name="theme-color" content="#00D4AA" />
   <title>Carbon Footprint Assistant 🌱</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>" />
 </head>
@@ -114,6 +116,10 @@
         <span class="nav-icon" aria-hidden="true">🤖</span>
         <span class="nav-label">AI Assistant</span>
       </a>
+      <a href="#leaderboard" class="nav-item" id="nav-leaderboard" onclick="navigateTo('leaderboard')">
+        <span class="nav-icon" aria-hidden="true">🏆</span>
+        <span class="nav-label">Leaderboard</span>
+      </a>
       <a href="#recommendations" class="nav-item" id="nav-recommendations" onclick="navigateTo('recommendations')">
         <span class="nav-icon" aria-hidden="true">💡</span>
         <span class="nav-label">Tips</span>
@@ -161,12 +167,15 @@
 
     <!-- ── Dashboard Page ──────────────────────────────── -->
     <div class="page-view active" id="page-dashboard" role="tabpanel" aria-labelledby="nav-dashboard">
-      <div class="page-header">
+      <div class="page-header" style="justify-content:space-between; display:flex;">
         <div>
           <h1 class="page-title">Dashboard</h1>
           <p class="page-subtitle" id="dashboard-greeting">Welcome back! Here's your carbon snapshot.</p>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="navigateTo('calculator')" aria-label="Add a new activity">+ Add Activity</button>
+        <div style="display:flex; gap:var(--spacing-sm);">
+          <button class="btn btn-ghost btn-sm" onclick="exportPDFReport()" aria-label="Export dashboard to PDF">📄 Export Report</button>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('calculator')" aria-label="Add a new activity">+ Add Activity</button>
+        </div>
       </div>
       <div class="page-content">
 
@@ -260,7 +269,13 @@
       <div class="page-content">
         <div class="calculator-container">
           <div class="card">
-            <div class="card-title mb-md">Select Category</div>
+            <div class="card-title mb-md" style="display:flex; justify-content:space-between; align-items:center;">
+              <span>Select Category</span>
+              <label for="receipt-upload" class="btn btn-sm" style="background:var(--bg-glass); border:1px solid var(--border-color); cursor:pointer;" id="btn-scan">
+                📷 AI Scan
+                <input type="file" id="receipt-upload" accept="image/*" capture="environment" style="display:none;" onchange="handleReceiptUpload(event)">
+              </label>
+            </div>
             <div class="category-tabs" role="tablist" aria-label="Activity categories">
               <button class="category-tab active transport" onclick="selectCategory('transport')" id="cat-tab-transport" role="tab" aria-selected="true" aria-controls="activity-form">
                 🚗 Transport
@@ -278,10 +293,19 @@
 
             <form id="activity-form" novalidate aria-live="polite">
               <div class="form-group">
-                <label class="form-label" for="activity-type">Activity Type</label>
-                <select class="form-control" id="activity-type" required aria-required="true" onchange="updateCO2Preview()">
+                <label for="activity-type">Activity Type</label>
+                <select id="activity-type" class="form-control" onchange="updateCO2Preview(); toggleFlightEstimator();" required>
                   <option value="">Select activity...</option>
                 </select>
+              </div>
+
+              <div id="flight-estimator" style="display:none; background:var(--bg-glass); padding:var(--spacing-md); border-radius:var(--radius-md); margin-bottom:var(--spacing-md); border:1px solid var(--border-color);">
+                <p style="font-size:0.85rem; margin-bottom:var(--spacing-sm); color:var(--text-secondary);">✈️ AI Flight Distance Estimator</p>
+                <div style="display:flex; gap:var(--spacing-sm); flex-wrap:wrap;">
+                  <input type="text" id="flight-from" placeholder="From (e.g. New York)" class="form-control" style="flex:1; min-width:100px;">
+                  <input type="text" id="flight-to" placeholder="To (e.g. London)" class="form-control" style="flex:1; min-width:100px;">
+                  <button type="button" id="btn-estimate-flight" class="btn btn-primary btn-sm" onclick="handleFlightEstimation()" style="padding:0.4rem 0.8rem;">Estimate km</button>
+                </div>
               </div>
 
               <div class="form-group">
@@ -419,6 +443,23 @@
       </div>
     </div>
 
+    <!-- ── Leaderboard Page ──────────────────────── -->
+    <div class="page-view" id="page-leaderboard" role="tabpanel" aria-labelledby="nav-leaderboard">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Global Leaderboard</h1>
+          <p class="page-subtitle">See how you rank against other eco-warriors 🌍</p>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="card">
+          <div id="leaderboard-list">
+            <div class="empty-state"><div class="spinner" style="margin:auto;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Profile / Badges Page ──────────────────────── -->
     <div class="page-view" id="page-profile" role="tabpanel" aria-labelledby="nav-profile">
       <div class="page-header">
@@ -490,9 +531,22 @@
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script src="js/api.js"></script>
 <script src="js/guest.js"></script>
 <script src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('ServiceWorker registered:', reg.scope);
+      }).catch(err => {
+        console.log('ServiceWorker registration failed:', err);
+      });
+    });
+  }
+</script>
 
 </body>
 </html>

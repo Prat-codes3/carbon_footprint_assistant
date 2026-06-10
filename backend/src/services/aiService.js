@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Activity = require('../models/Activity');
-const { GLOBAL_AVERAGE_KG_PER_YEAR } = require('../utils/emissionFactors');
+const { EMISSION_FACTORS, GLOBAL_AVERAGE_KG_PER_YEAR } = require('../utils/emissionFactors');
 
 let genAI = null;
 
@@ -179,4 +179,88 @@ const chat = async (userId, message, chatHistory = []) => {
   };
 };
 
-module.exports = { chat, initGemini };
+/**
+ * Analyze a receipt/bill image using Gemini Vision
+ */
+const analyzeReceipt = async (base64Image, mimeType) => {
+  if (!genAI) throw new Error('Gemini AI not initialized. Provide API key.');
+  
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  
+  // Build a list of valid activities to force Gemini to map to our schema
+  const validActivities = [];
+  for (const [cat, items] of Object.entries(EMISSION_FACTORS)) {
+    for (const [key, details] of Object.entries(items)) {
+      validActivities.push(`Category: "${cat}", Key: "${key}", Name: "${details.label}", Unit: "${details.unit}"`);
+    }
+  }
+
+  const prompt = `You are a receipt and utility bill parser for a Carbon Footprint Assistant app.
+Analyze the attached image (receipt, bill, or ticket) and extract items that cause carbon emissions.
+Map the items strictly to the following allowed categories and keys:
+${validActivities.join('\n')}
+
+Rules:
+1. Try to find the most relevant items (e.g. if it's a grocery receipt, look for beef, chicken, dairy).
+2. If it's an electricity bill, look for kWh usage.
+3. If it's a flight ticket, estimate distance in km.
+4. If it's gas/fuel, extract litres.
+5. Return ONLY a valid JSON array. No markdown, no \`\`\`json wrappers. 
+
+Output format:
+[
+  {
+    "category": "food",
+    "activityType": "beef",
+    "quantity": 1.5,
+    "note": "Grocery store receipt"
+  }
+]`;
+
+  try {
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Image,
+          mimeType: mimeType || 'image/jpeg'
+        }
+      }
+    ]);
+    
+    let text = result.response.text().trim();
+    if (text.startsWith('\`\`\`json')) text = text.replace(/\`\`\`json/g, '');
+    if (text.endsWith('\`\`\`')) text = text.replace(/\`\`\`/g, '');
+    
+    return JSON.parse(text);
+  } catch (err) {
+    console.error('Vision API Error:', err);
+    throw new Error('Failed to parse image: ' + err.message);
+  }
+};
+
+/**
+ * Estimate flight distance between two cities
+ */
+const estimateFlightDistance = async (fromCity, toCity) => {
+  if (!genAI) throw new Error('Gemini AI not initialized.');
+  
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const prompt = `Calculate the direct flight distance (great circle) between "${fromCity}" and "${toCity}" in kilometers. 
+Return ONLY a valid JSON object with a single key "distance_km" containing the number. Do not include markdown or explanations.
+Example: {"distance_km": 5500}`;
+
+  try {
+    const result = await model.generateContent(prompt);
+    let text = result.response.text().trim();
+    if (text.startsWith('\`\`\`json')) text = text.replace(/\`\`\`json/g, '');
+    if (text.endsWith('\`\`\`')) text = text.replace(/\`\`\`/g, '');
+    
+    return JSON.parse(text);
+  } catch (err) {
+    console.error('Flight estimation error:', err);
+    throw new Error('Failed to estimate distance.');
+  }
+};
+
+module.exports = { chat, initGemini, analyzeReceipt, estimateFlightDistance };

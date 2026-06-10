@@ -118,6 +118,24 @@ class ApiClient {
       body: JSON.stringify({ message, history })
     });
   }
+
+  async scanReceipt(imageBase64, mimeType) {
+    return this.request('/assistant/scan', {
+      method: 'POST',
+      body: JSON.stringify({ imageBase64, mimeType })
+    });
+  }
+
+  async estimateFlight(fromCity, toCity) {
+    return this.request('/assistant/estimate-flight', {
+      method: 'POST',
+      body: JSON.stringify({ fromCity, toCity })
+    });
+  }
+
+  async getLeaderboard() {
+    return this.request('/dashboard/leaderboard');
+  }
 }
 
 // Export singleton

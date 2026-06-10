@@ -162,4 +162,25 @@ router.get('/recommendations', async (req, res, next) => {
   }
 });
 
+/**
+ * @route   GET /api/dashboard/leaderboard
+ * @desc    Get top users by greenScore
+ * @access  Public
+ */
+router.get('/leaderboard', async (req, res, next) => {
+  try {
+    const topUsers = await User.find({})
+      .select('username greenScore level')
+      .sort({ greenScore: -1 })
+      .limit(10);
+      
+    res.json({
+      success: true,
+      data: topUsers
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
