@@ -50,6 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set random fun fact
   document.getElementById('fun-fact').textContent = FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)];
 
+  // Apply saved theme preference
+  const savedTheme = localStorage.getItem('cfa_theme') || 'dark';
+  applyTheme(savedTheme);
+
   // Check if already logged in
   const savedUser = localStorage.getItem('cfa_user');
   const token = localStorage.getItem('cfa_token');
@@ -73,6 +77,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load activity types for calculator
   loadActivityTypes();
 });
+
+// ─── Theme Toggle ────────────────────────────────────────────
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    const label = document.getElementById('theme-toggle-label');
+    if (label) label.textContent = '☀️ Light Mode';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    const label = document.getElementById('theme-toggle-label');
+    if (label) label.textContent = '🌙 Dark Mode';
+  }
+  localStorage.setItem('cfa_theme', theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
 
 // ─── Auth Functions ───────────────────────────────────────────────
 function switchAuthTab(tab) {
@@ -601,7 +624,7 @@ async function handleLogActivity(e) {
   } finally {
     btn.disabled = false;
     btn.classList.remove('btn-loading');
-    btn.textContent = 'Log Activity';
+    btn.textContent = 'Save Entry';
   }
 }
 
@@ -652,9 +675,9 @@ function renderActivitiesList(activities, containerEl) {
     containerEl.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon" aria-hidden="true">📋</div>
-        <h3>No activities yet</h3>
-        <p>Start tracking by logging your first activity.</p>
-        <button class="btn btn-primary mt-md" onclick="navigateTo('calculator')">Log Activity</button>
+        <h3>No entries yet</h3>
+        <p>Start tracking by adding your first emission entry.</p>
+        <button class="btn btn-primary mt-md" onclick="navigateTo('calculator')">Add Your First Entry</button>
       </div>`;
     return;
   }
