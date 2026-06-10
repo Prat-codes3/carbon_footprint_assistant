@@ -101,8 +101,8 @@
         <span class="nav-label">Dashboard</span>
       </a>
       <a href="#calculator" class="nav-item" id="nav-calculator" onclick="navigateTo('calculator')">
-        <span class="nav-icon" aria-hidden="true">➕</span>
-        <span class="nav-label">Add Emission</span>
+        <span class="nav-icon" aria-hidden="true">🧮</span>
+        <span class="nav-label">Add Activity</span>
       </a>
       <a href="#activities" class="nav-item" id="nav-activities" onclick="navigateTo('activities')">
         <span class="nav-icon" aria-hidden="true">📋</span>
@@ -166,7 +166,7 @@
           <h1 class="page-title">Dashboard</h1>
           <p class="page-subtitle" id="dashboard-greeting">Welcome back! Here's your carbon snapshot.</p>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="navigateTo('calculator')" aria-label="Log a new activity">+ Log Activity</button>
+        <button class="btn btn-primary btn-sm" onclick="navigateTo('calculator')" aria-label="Add a new activity">+ Add Activity</button>
       </div>
       <div class="page-content">
 
@@ -253,20 +253,20 @@
       <div class="page-view" id="page-calculator" role="tabpanel" aria-labelledby="nav-calculator">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Add Emission</h1>
-          <p class="page-subtitle">What did you do today? Record it and see your CO₂ impact</p>
+          <h1 class="page-title">Add Activity</h1>
+          <p class="page-subtitle">Record your carbon-emitting activities</p>
         </div>
       </div>
       <div class="page-content">
         <div class="calculator-container">
           <div class="card">
             <div class="card-title mb-md">Select Category</div>
-            <div class="category-tabs" role="tablist" aria-label="What did you do?">
+            <div class="category-tabs" role="tablist" aria-label="Activity categories">
               <button class="category-tab active transport" onclick="selectCategory('transport')" id="cat-tab-transport" role="tab" aria-selected="true" aria-controls="activity-form">
-                🚗 Travel
+                🚗 Transport
               </button>
               <button class="category-tab energy" onclick="selectCategory('energy')" id="cat-tab-energy" role="tab" aria-selected="false">
-                💡 Home Energy
+                💡 Energy
               </button>
               <button class="category-tab food" onclick="selectCategory('food')" id="cat-tab-food" role="tab" aria-selected="false">
                 🍽️ Food
@@ -309,8 +309,8 @@
               </div>
 
               <div style="margin-top:var(--spacing-lg); display:flex; gap:var(--spacing-sm);">
-                <button type="submit" class="btn btn-primary" id="btn-log-activity" style="flex:1;" aria-label="Save this emission entry">
-                  Save Entry
+                <button type="submit" class="btn btn-primary" id="btn-log-activity" style="flex:1;" aria-label="Add this activity">
+                  Add Activity
                 </button>
                 <button type="button" class="btn btn-ghost" onclick="resetCalculator()" aria-label="Reset form">Reset</button>
               </div>
@@ -333,7 +333,7 @@
           <h1 class="page-title">Activity Log</h1>
           <p class="page-subtitle">Your complete carbon footprint history</p>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="navigateTo('calculator')" aria-label="Log a new activity">+ Log Activity</button>
+        <button class="btn btn-primary btn-sm" onclick="navigateTo('calculator')" aria-label="Add a new activity">+ Add Activity</button>
       </div>
       <div class="page-content">
         <!-- Filters -->
@@ -356,7 +356,7 @@
               <div class="empty-state-icon" aria-hidden="true">📋</div>
               <h3>No activities logged yet</h3>
               <p>Start tracking your carbon footprint by logging your first activity.</p>
-              <button class="btn btn-primary mt-md" onclick="navigateTo('calculator')" aria-label="Add first emission entry">Add Your First Entry</button>
+              <button class="btn btn-primary mt-md" onclick="navigateTo('calculator')" aria-label="Add first activity">Add Activity</button>
             </div>
           </div>
 

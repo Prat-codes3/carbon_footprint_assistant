@@ -624,7 +624,7 @@ async function handleLogActivity(e) {
   } finally {
     btn.disabled = false;
     btn.classList.remove('btn-loading');
-    btn.textContent = 'Save Entry';
+    btn.textContent = 'Add Activity';
   }
 }
 
@@ -677,7 +677,7 @@ function renderActivitiesList(activities, containerEl) {
         <div class="empty-state-icon" aria-hidden="true">📋</div>
         <h3>No entries yet</h3>
         <p>Start tracking by adding your first emission entry.</p>
-        <button class="btn btn-primary mt-md" onclick="navigateTo('calculator')">Add Your First Entry</button>
+        <button class="btn btn-primary mt-md" onclick="navigateTo('calculator')">Add Activity</button>
       </div>`;
     return;
   }
