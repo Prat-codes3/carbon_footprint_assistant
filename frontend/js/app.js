@@ -476,7 +476,7 @@ async function updateTrend(days) {
 // ─── Calculator ───────────────────────────────────────────────────
 const EMISSION_FACTORS_LOCAL = {
   transport: { car_petrol: 0.192, car_diesel: 0.171, car_electric: 0.053, motorcycle: 0.114, bus: 0.089, train: 0.041, subway: 0.028, flight_domestic: 0.255, flight_international: 0.195, cycling: 0 },
-  energy: { electricity: 0.233, natural_gas: 2.04, heating_oil: 2.68, lpg: 1.56, solar: 0.041 },
+  energy: { ac_cooling: 0.35, heater: 0.466, washing_machine: 0.116, dishwasher: 0.35, lights: 0.023 },
   food: { beef: 27, lamb: 39.2, pork: 12.1, chicken: 6.9, fish: 6.1, dairy: 3.2, eggs: 4.8, plant_based_meal: 0.5, meat_meal: 2.5 },
   shopping: { clothing: 33.4, electronics_smartphone: 70, electronics_laptop: 422, electronics_tv: 350, streaming: 0.036, online_shopping: 0.5 }
 };
@@ -500,7 +500,7 @@ async function loadActivityTypes() {
 function buildLocalActivityTypes() {
   const labels = {
     transport: { car_petrol: { label: 'Car (Petrol)', unit: 'km', icon: '🚗' }, car_diesel: { label: 'Car (Diesel)', unit: 'km', icon: '🚗' }, car_electric: { label: 'Car (Electric)', unit: 'km', icon: '⚡' }, motorcycle: { label: 'Motorcycle', unit: 'km', icon: '🏍️' }, bus: { label: 'Bus', unit: 'km', icon: '🚌' }, train: { label: 'Train', unit: 'km', icon: '🚆' }, subway: { label: 'Subway/Metro', unit: 'km', icon: '🚇' }, flight_domestic: { label: 'Flight (Domestic)', unit: 'km', icon: '✈️' }, flight_international: { label: 'Flight (International)', unit: 'km', icon: '✈️' }, cycling: { label: 'Cycling / Walking', unit: 'km', icon: '🚴' } },
-    energy: { electricity: { label: 'Electricity', unit: 'kWh', icon: '💡' }, natural_gas: { label: 'Natural Gas', unit: 'm³', icon: '🔥' }, heating_oil: { label: 'Heating Oil', unit: 'litres', icon: '🛢️' }, lpg: { label: 'LPG', unit: 'litres', icon: '⛽' }, solar: { label: 'Solar Energy', unit: 'kWh', icon: '☀️' } },
+    energy: { ac_cooling: { label: 'Air Conditioner', unit: 'hours', icon: '❄️' }, heater: { label: 'Space Heater', unit: 'hours', icon: '🔥' }, washing_machine: { label: 'Washing Machine', unit: 'loads', icon: '👕' }, dishwasher: { label: 'Dishwasher', unit: 'loads', icon: '🍽️' }, lights: { label: 'Room Lighting', unit: 'hours', icon: '💡' } },
     food: { beef: { label: 'Beef', unit: 'kg', icon: '🥩' }, lamb: { label: 'Lamb / Mutton', unit: 'kg', icon: '🍖' }, pork: { label: 'Pork', unit: 'kg', icon: '🥩' }, chicken: { label: 'Chicken', unit: 'kg', icon: '🍗' }, fish: { label: 'Fish / Seafood', unit: 'kg', icon: '🐟' }, dairy: { label: 'Dairy', unit: 'kg', icon: '🥛' }, eggs: { label: 'Eggs', unit: 'kg', icon: '🥚' }, plant_based_meal: { label: 'Plant-Based Meal', unit: 'meals', icon: '🥗' }, meat_meal: { label: 'Meat Meal', unit: 'meals', icon: '🍔' } },
     shopping: { clothing: { label: 'New Clothing (per item)', unit: 'items', icon: '👕' }, electronics_smartphone: { label: 'Smartphone', unit: 'items', icon: '📱' }, electronics_laptop: { label: 'Laptop', unit: 'items', icon: '💻' }, electronics_tv: { label: 'Television', unit: 'items', icon: '📺' }, streaming: { label: 'Video Streaming', unit: 'hours', icon: '📺' }, online_shopping: { label: 'Online Shopping Delivery', unit: 'packages', icon: '📦' } }
   };

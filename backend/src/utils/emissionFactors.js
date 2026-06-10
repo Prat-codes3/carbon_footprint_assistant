@@ -69,35 +69,35 @@ const EMISSION_FACTORS = {
   },
 
   energy: {
-    electricity: {
-      factor: 0.233,       // kg CO2 per kWh (global avg)
-      unit: 'kWh',
-      label: 'Electricity',
-      icon: '💡'
+    ac_cooling: {
+      factor: 0.35,        // approx 1.5 kWh per hour
+      unit: 'hours',
+      label: 'Air Conditioner',
+      icon: '❄️'
     },
-    natural_gas: {
-      factor: 2.04,        // kg CO2 per cubic meter
-      unit: 'm³',
-      label: 'Natural Gas',
+    heater: {
+      factor: 0.466,       // approx 2.0 kWh per hour
+      unit: 'hours',
+      label: 'Space Heater',
       icon: '🔥'
     },
-    heating_oil: {
-      factor: 2.68,        // kg CO2 per litre
-      unit: 'litres',
-      label: 'Heating Oil',
-      icon: '🛢️'
+    washing_machine: {
+      factor: 0.116,       // approx 0.5 kWh per load
+      unit: 'loads',
+      label: 'Washing Machine',
+      icon: '👕'
     },
-    lpg: {
-      factor: 1.56,        // kg CO2 per litre
-      unit: 'litres',
-      label: 'LPG',
-      icon: '⛽'
+    dishwasher: {
+      factor: 0.35,        // approx 1.5 kWh per load
+      unit: 'loads',
+      label: 'Dishwasher',
+      icon: '🍽️'
     },
-    solar: {
-      factor: 0.041,       // kg CO2 per kWh (lifecycle)
-      unit: 'kWh',
-      label: 'Solar Energy',
-      icon: '☀️'
+    lights: {
+      factor: 0.023,       // approx 0.1 kWh per hour for a room
+      unit: 'hours',
+      label: 'Room Lighting',
+      icon: '💡'
     }
   },
 

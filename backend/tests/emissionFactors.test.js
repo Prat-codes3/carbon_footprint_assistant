@@ -8,10 +8,9 @@ describe('Carbon Emission Calculations', () => {
       expect(result).toBeCloseTo(19.2, 2);
     });
 
-    test('calculates electricity emissions correctly', () => {
-      // 10 kWh * 0.233 = 2.33 kg CO2
-      const result = calculateEmissions('energy', 'electricity', 10);
-      expect(result).toBeCloseTo(2.33, 2);
+    it('calculates AC cooling emissions correctly', () => {
+      const co2 = calculateEmissions('energy', 'ac_cooling', 2);
+      expect(co2).toBe(0.7); // 0.35 * 2
     });
 
     test('calculates beef emissions correctly', () => {
