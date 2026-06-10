@@ -1155,12 +1155,13 @@ async function loadLeaderboard() {
     let users = [];
     if (state.isGuest) {
       // Mock leaderboard for guest mode
+      const freshUser = window.guestManager.getUser();
       users = [
         { username: 'EcoWarrior99', level: 8, greenScore: 1450 },
         { username: 'PlanetSaver', level: 7, greenScore: 1200 },
         { username: 'GreenBean', level: 6, greenScore: 950 },
         { username: 'TreeHugger', level: 5, greenScore: 820 },
-        { username: state.user?.username || 'Guest', level: state.user?.gamification?.level || 1, greenScore: state.user?.gamification?.greenScore || 0 }
+        { username: freshUser.username || 'Guest', level: freshUser.gamification?.level || 1, greenScore: freshUser.gamification?.greenScore || 0 }
       ].sort((a,b) => b.greenScore - a.greenScore);
     } else {
       const response = await window.api.getLeaderboard();
@@ -1178,7 +1179,7 @@ async function loadLeaderboard() {
       if (i === 1) rankIcon = '🥈';
       if (i === 2) rankIcon = '🥉';
 
-      const isCurrentUser = state.user && state.user.username === u.username;
+      const isCurrentUser = state.isGuest ? (u.username === 'Guest') : (state.user && state.user.username === u.username);
 
       return `
         <div style="display:flex; align-items:center; padding:var(--spacing-md); border-bottom:1px solid var(--border-color); background:${isCurrentUser ? 'rgba(0, 212, 170, 0.05)' : 'transparent'};">
