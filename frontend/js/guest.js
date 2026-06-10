@@ -47,7 +47,32 @@ class GuestManager {
 
     activities.unshift(activity);
     this.saveActivities(activities);
-    return { success: true, data: activity, gamification: { pointsEarned: 5, newBadges: [] } };
+
+    // Update guest user gamification points
+    const user = this.getUser();
+    
+    // Base points for logging
+    let pointsEarned = 5;
+    
+    // Bonus points for low-emission activities (e.g. cycling, public transit)
+    if (activity.co2Kg <= 0.1) pointsEarned += 15;
+    else if (activity.co2Kg < 2) pointsEarned += 10;
+    else if (activity.co2Kg < 5) pointsEarned += 5;
+    
+    // Penalize slightly for very high emission (but still give base points)
+    if (activity.co2Kg > 50) pointsEarned = 2;
+
+    user.gamification.greenScore += pointsEarned;
+    
+    // Level up logic (every 50 points = 1 level)
+    const newLevel = Math.floor(user.gamification.greenScore / 50) + 1;
+    if (newLevel > user.gamification.level) {
+      user.gamification.level = newLevel;
+    }
+
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
+    return { success: true, data: activity, gamification: { pointsEarned, newBadges: [] } };
   }
 
   deleteActivity(id) {
