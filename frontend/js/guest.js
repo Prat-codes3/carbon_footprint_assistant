@@ -10,17 +10,40 @@ class GuestManager {
   }
 
   getUser() {
-    const stored = localStorage.getItem(this.USER_KEY);
-    if (stored) return JSON.parse(stored);
-    const guest = {
-      id: 'guest_' + Date.now(),
-      username: 'Guest',
-      email: '',
-      isGuest: true,
-      profile: { displayName: 'Guest User', targetReduction: 20 },
-      gamification: { level: 1, greenScore: 0, badges: [], currentStreak: 0, longestStreak: 0 }
-    };
-    localStorage.setItem(this.USER_KEY, JSON.stringify(guest));
+    let stored = localStorage.getItem(this.USER_KEY);
+    let guest;
+    if (stored) {
+      guest = JSON.parse(stored);
+    } else {
+      guest = {
+        id: 'guest_' + Date.now(),
+        username: 'Guest',
+        email: '',
+        isGuest: true,
+        profile: { displayName: 'Guest User', targetReduction: 20 },
+        gamification: { level: 1, greenScore: 0, badges: [], currentStreak: 0, longestStreak: 0 }
+      };
+    }
+
+    // Retroactive points calculation for users caught by the old bug
+    const activities = this.getActivities();
+    if (activities.length > 0 && guest.gamification.greenScore === 0) {
+      let totalPoints = 0;
+      activities.forEach(activity => {
+        let pts = 5;
+        if (activity.co2Kg <= 0.1) pts += 15;
+        else if (activity.co2Kg < 2) pts += 10;
+        else if (activity.co2Kg < 5) pts += 5;
+        if (activity.co2Kg > 50) pts = 2;
+        totalPoints += pts;
+      });
+      guest.gamification.greenScore = totalPoints;
+      guest.gamification.level = Math.floor(totalPoints / 50) + 1;
+      localStorage.setItem(this.USER_KEY, JSON.stringify(guest));
+    } else if (!stored) {
+      localStorage.setItem(this.USER_KEY, JSON.stringify(guest));
+    }
+    
     return guest;
   }
 
