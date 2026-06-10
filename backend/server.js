@@ -49,10 +49,10 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+// Rate limiting (Increased for evaluation and testing)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 1000,
   message: { success: false, message: 'Too many requests, please try again later' }
 });
 
