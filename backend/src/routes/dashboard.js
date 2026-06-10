@@ -1,5 +1,6 @@
 const express = require('express');
 const Activity = require('../models/Activity');
+const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { GLOBAL_AVERAGE_KG_PER_DAY, GLOBAL_AVERAGE_KG_PER_YEAR } = require('../utils/emissionFactors');
 const gamificationService = require('../services/gamificationService');
